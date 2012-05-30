@@ -5,20 +5,68 @@ define('_GAM_EXEC', "./gam/gam.py");
 /// DO NOT EDIT BELOW THIS LINE----------------------------------------
 define('_GRP_REGEX', "/Member: (.*) Type: (.*) Direct Member: (.*)/");
 define('_ORG_REGEX', "/ (.*)@(.*)/");
-if($argc < 3)
+function help()
+{
+   echo "Usage: ".$argv[0]." [--detail] [--noremove] [--noadd] --group GOOGLE_GROUP --org SEARCH_STRING\n\n";
+}
+if($argc < 5)
 {
 	echo "Error: Too few arguments\n";
-	echo "Usage: ".$argv[0]." (Google Group) (Organization Search String)\n\n";
+	help();
+	return -1;
+}
+$doAdd		 = true;
+$doRemove	 = true;
+$detail		 = false;
+$googleGroup = "";
+$googleOrg   = "";
+for($i = 1; $i < $argc; $i++)
+{
+	$arg = $argv[$i];
+	switch($arg)
+	{
+		case '--noremove':
+		{
+			$doRemove = false;
+		} break;
+		case '--noadd':
+		{
+			$doAdd = false;
+		} break;
+		case '--detail':
+		{
+			$detail = true;
+		} break;
+		case '--group':
+		{
+			$googleGroup = $argv[ $i + 1 ];
+			$i++;
+		} break;
+		case '--org':
+		{
+			$googleOrg = $argv[ $i + 1 ];
+			$i++;
+		} break;
+	}
+}
+if(trim($googleGroup) == "")
+{
+	echo "Error: No group given\n";
+	help();
+	return -1;
+}
+if(trim($googleOrg) == "")
+{
+	echo "Error: No organization given\n";
+	help();
 	return -1;
 }
 
-$googleGroup = $argv[1];
-$googleOrg   = $argv[2];
 /////////////////////////////////////////////////////////////////////////////
 $inGoogleGroup = array();
 $inGoogleOrg   = array();
-$add           = array();
-$remove        = array();
+$add		   = array();
+$remove		= array();
 
 // Get the list of members from gam
 $command = _GAM_EXEC." info group ".$googleGroup;
@@ -32,7 +80,7 @@ foreach($matches[1] as $email)
 // Get the list of all organizations
 $command = _GAM_EXEC." print orgs 2> /dev/null";
 $output  = shell_exec($command);
-$orgs    = explode("\n",trim($output));
+$orgs	= explode("\n",trim($output));
 $orgCnt  = 0;
 foreach($orgs as $k => $org)
 {
@@ -69,24 +117,31 @@ $remove = array_diff($inGoogleGroup,$inGoogleOrg); // In group but not org
 $addCnt = 0;
 $remCnt = 0;
 // Add
-foreach($add as $email)
+if($doAdd)
 {
-	$command = _GAM_EXEC." update group $googleGroup add member $email 2>&1";
-	$t = trim(shell_exec($command));
-	$t = $t == "" ? "Added $email to $googleGroup" : $t;
-	echo $t."\n";
-	$addCnt++;
+	foreach($add as $email)
+	{
+		$command = _GAM_EXEC." update group $googleGroup add member $email 2>&1";
+		$t = trim(shell_exec($command));
+		$t = $t == "" ? "Added $email to $googleGroup" : $t;
+		if($detail)
+			echo $t."\n";
+		$addCnt++;
+	}
 }
-
 // Remove
-foreach($remove as $email)
+if($doRemove)
 {
-	$command = _GAM_EXEC." update group $googleGroup remove member $email 2>&1";
-	$t = trim(shell_exec($command));
-	$t = $t == "" ? "Removed $email from $googleGroup" : $t;
-	echo $t."\n";
-	$remCnt++;
+	foreach($remove as $email)
+	{
+		$command = _GAM_EXEC." update group $googleGroup remove member $email 2>&1";
+		$t = trim(shell_exec($command));
+		$t = $t == "" ? "Removed $email from $googleGroup" : $t;
+		if($detail)
+			echo $t."\n";
+		$remCnt++;
+	}
 }
-
-echo "Done\nAdded: $addCnt\nRemoved: $remCnt\n";
+if($detail)
+	echo "Added: $addCnt\nRemoved: $remCnt\n";
 ?>

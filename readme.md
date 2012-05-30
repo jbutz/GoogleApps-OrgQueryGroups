@@ -5,13 +5,13 @@ This utility uses the <a href="https://code.google.com/p/google-apps-manager/">G
 
 **Usage:**
 
-<code>./googleQuery.php GROUP_NAME SEARCH_STRING</code>
+<code>./googleQuery.php [--detail] [--noadd] [--noremove] --group GROUP_NAME --org SEARCH_STRING</code>
 
 **Example:**
 
 This example will pull all of the members that have an organization with the string "Location 1" add syncronize that with the group *loc1*.
 
-<code>./googleQuery.php loc1 "Location 1"</code>
+<code>./googleQuery.php --group loc1 --org "Location 1"</code>
 
 
 How the Search Works
